@@ -1,0 +1,22 @@
+[project]
+name = "idp-search-rag"
+version = "0.1.0"
+description = "RAG Implementation using FastAPI or Flask for contextual search of datasets on India Data Portal"
+authors = [
+    {name = "Surya Kandukuri",email = "sudham.surya@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "transformers (>=4.48.3,<5.0.0)",
+    "nltk (>=3.9.1,<4.0.0)",
+    "sentence-transformers (>=3.4.1,<4.0.0)",
+    "torch (>=2.6.0,<3.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+    "requests (>=2.32.3,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
