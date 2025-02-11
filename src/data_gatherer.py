@@ -6,18 +6,31 @@ import nltk
 from nltk.corpus import stopwords
 from transformers import AutoTokenizer, AutoModel
 import torch
-from llama_index.core import Settings, VectorStoreIndex, Document
+from llama_index.core import VectorStoreIndex, Document
 import llama_index
-from llama_index.core import Settings
+from llama_index.core.storage import StorageContext
 from llama_index.llms.groq import Groq
+# from llama_index import VectorStoreIndex, Document
 
+from llama_index.vector_stores.chroma import ChromaVectorStore
+
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+
+import chromadb
+
+
+# Create Chroma client and collection
+
+chroma_client = chromadb.EphemeralClient()
+
+chroma_collection = chroma_client.create_collection("idp_search")
 
 llm = Groq(model="llama3-70b-8192", api_key="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")
 
-# Settings.llm = Ollama(model="llama2", request_timeout=120.0)
-# Settings.embed_model = HuggingFaceEmbedding(
-#     model_name="BAAI/bge-small-en-v1.5"
-# )
+# # Settings.llm = Ollama(model="llama2", request_timeout=120.0)
+# # Settings.embed_model = HuggingFaceEmbedding(
+# #     model_name="BAAI/bge-small-en-v1.5"
+# # )
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
@@ -37,7 +50,6 @@ def fetch_ckan_package_data():
         print(f"Response text: {response.text}")
     else:
         try:
-            print("success")
             json_data = response.json()
         except requests.exceptions.JSONDecodeError:
             print("Error: Response is not valid JSON")
@@ -49,7 +61,7 @@ def fetch_ckan_package_data():
     for package in packages:
         resource_details = fetch_resource_details(package['resources']) 
         datastore_info = fetch_datastore_info(package['resources'])
-        combined_text = f"{package['title']} {package['notes']} {resource_details} {datastore_info}"
+        combined_text = f"{package['title']} {package['notes']} {package['name']} {package['source_name']} {package['sector']} {resource_details} {datastore_info}"
         documents.append({"text": preprocess_text(combined_text), "metadata": {"package_id": package["id"], "title": package["title"], "url": package["url"]}})
     return documents
 
@@ -57,7 +69,11 @@ def fetch_ckan_package_data():
 def fetch_resource_details(resources):
     resource_texts = []
     for resource in resources:
-        resource_text = f"Resource Name: {resource.get('name', '')}, Format: {resource.get('format', '')}, Description: {resource.get('description', '')}"
+        resource_text = f"Resource Name: {resource.get('name', '')}, Format: {resource.get('format', '')}, 
+                    Description: {resource.get('description', '')}, Data_Insights: {resource.get('data_insights', '')},
+                    methodology: {resource.get('methodology', '')}, Data_Usage: {resource.get('data_usage', '')},
+                    frequency: {resource.get('frequency', '')}, sku: {resource.get('sku', '')},
+                    data_last_updated: {resource.get('data_last_updated', '')}, data_retreival_date: {resource.get('data_retreival_date', '')},"
         resource_texts.append(resource_text)
     return ' '.join(resource_texts)
 
@@ -82,45 +98,35 @@ def preprocess_text(text):
     # Join the tokens back into a string
     return ' '.join(tokens)
 
-tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
-model = AutoModel.from_pretrained('bert-base-uncased')
-
-# Generate embeddings using BERT
-def generate_bert_embeddings(texts):
-    embeddings = []
-    for text in texts:
-        inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
-        with torch.no_grad():
-            outputs = model(**inputs)
-            # Use the mean of token embeddings as the document embedding
-            last_hidden_state = outputs.last_hidden_state.mean(dim=1)
-            embeddings.append(last_hidden_state.squeeze().numpy())
-    return embeddings
-
 
 # Convert the documents into LlamaIndex's document structure
 def create_index(documents):
+
+    # Define embedding function
+
+    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5")
+
     indexed_documents = [Document(text=doc["text"], extra_info=doc["metadata"]) for doc in documents]
-    
-    # Create the service context and index
-    service_context = llama_index.settings.Settings.from_defaults()
-    index = VectorStoreIndex.from_documents(indexed_documents, service_context=service_context)
-    
-    # Save the index
-    index.storage_context.persist("llama_index.json")
+
+    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+
+    storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+    index = VectorStoreIndex.from_documents(indexed_documents, storage_context=storage_context, embed_model=embed_model)
+
     return index
 
 def gather_embed_and_index():
     # Step 1: Fetch data
     documents = fetch_ckan_package_data()
-    texts = [doc["text"] for doc in documents]
 
-    # Step 2: Generate BERT embeddings (if needed for custom processing)
-    embeddings = generate_bert_embeddings(texts)  # Optional if you wish to modify indexing
+    # Step 2: Embeddings, Chroma DB, Create the index using LlamaIndex
+    index =create_index(documents)
 
-    # Step 3: Create the index using LlamaIndex
-    create_index(documents)
+    return index
 
 
 if __name__ == "__main__":
-    gather_embed_and_index()
+    index = gather_embed_and_index()
+    index.storage_context.persist("llama_index.json")
+    print("Data gathered and index created.")
