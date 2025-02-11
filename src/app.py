@@ -9,8 +9,14 @@ from langchain.chains import RetrievalQA
 from sentence_transformers import SentenceTransformer
 from data_gatherer import gather_and_process_data
 
+from llama_index.llms.groq import Groq
+
+
+
+
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
+
+llm = Groq(model="llama3-70b-8192", api_key=os.getenv('API_KEY'))
 
 app = FastAPI()
 

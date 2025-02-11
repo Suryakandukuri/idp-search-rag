@@ -6,8 +6,18 @@ import nltk
 from nltk.corpus import stopwords
 from transformers import AutoTokenizer, AutoModel
 import torch
-from llama_index import ServiceContext, VectorStoreIndex, SimpleDocument
+from llama_index.core import Settings, VectorStoreIndex, Document
+import llama_index
+from llama_index.core import Settings
+from llama_index.llms.groq import Groq
 
+
+llm = Groq(model="llama3-70b-8192", api_key="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")
+
+# Settings.llm = Ollama(model="llama2", request_timeout=120.0)
+# Settings.embed_model = HuggingFaceEmbedding(
+#     model_name="BAAI/bge-small-en-v1.5"
+# )
 
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
@@ -37,8 +47,9 @@ def fetch_ckan_package_data():
         packages = json_data['result']['results']
         documents = []
     for package in packages:
-        resource_details = fetch_resource_details(package['resources'])
-        combined_text = f"{package['title']} {package['notes']} {' '.join(str(tag['name']) for tag in package['tags'])} {resource_details}"
+        resource_details = fetch_resource_details(package['resources']) 
+        datastore_info = fetch_datastore_info(package['resources'])
+        combined_text = f"{package['title']} {package['notes']} {resource_details} {datastore_info}"
         documents.append({"text": preprocess_text(combined_text), "metadata": {"package_id": package["id"], "title": package["title"], "url": package["url"]}})
     return documents
 
@@ -51,11 +62,14 @@ def fetch_resource_details(resources):
     return ' '.join(resource_texts)
 
 # Datastore SQL API Retrieval (Example for query fetching columns)
-def fetch_datastore_info(resource_id):
-    sql_api_url = f"https://ckandev.indiadataportal.com/api/3/action/datastore_info?id={resource_id}"
-    response = requests.get(sql_api_url).json()
-    rows = response.get("result", {}).get("records", [])
-    return " ".join(str(row) for row in rows)
+def fetch_datastore_info(resources):
+    datastore_info_texts = []
+    for resource in resources:
+        api_url = f"https://ckandev.indiadataportal.com/api/3/action/datastore_info?id={resource['id']}"
+        response = requests.get(api_url).json()
+        rows = response.get("result", {}).get("records", [])
+        datastore_info_texts.append(" ".join(str(row) for row in rows))
+        return datastore_info_texts
 
 # Custom preprocessing logic
 def preprocess_text(text):
@@ -86,10 +100,10 @@ def generate_bert_embeddings(texts):
 
 # Convert the documents into LlamaIndex's document structure
 def create_index(documents):
-    indexed_documents = [SimpleDocument(text=doc["text"], extra_info=doc["metadata"]) for doc in documents]
+    indexed_documents = [Document(text=doc["text"], extra_info=doc["metadata"]) for doc in documents]
     
     # Create the service context and index
-    service_context = ServiceContext.from_defaults()
+    service_context = llama_index.settings.Settings.from_defaults()
     index = VectorStoreIndex.from_documents(indexed_documents, service_context=service_context)
     
     # Save the index
