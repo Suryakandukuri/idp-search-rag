@@ -1,5 +1,5 @@
 # all json file in data directory
-*.json
+data/**/*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

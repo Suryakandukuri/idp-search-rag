@@ -1,21 +1,12 @@
 # from ckanapi import RemoteCKAN
 import requests
-from embeddings_vectordb import *
-import json
 import nltk
 from nltk.corpus import stopwords
-from transformers import AutoTokenizer, AutoModel
-import torch
 from llama_index.core import VectorStoreIndex, Document
-import llama_index
 from llama_index.core.storage import StorageContext
 from llama_index.llms.groq import Groq
-# from llama_index import VectorStoreIndex, Document
-
 from llama_index.vector_stores.chroma import ChromaVectorStore
-
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-
 import chromadb
 
 
@@ -69,11 +60,7 @@ def fetch_ckan_package_data():
 def fetch_resource_details(resources):
     resource_texts = []
     for resource in resources:
-        resource_text = f"Resource Name: {resource.get('name', '')}, Format: {resource.get('format', '')}, 
-                    Description: {resource.get('description', '')}, Data_Insights: {resource.get('data_insights', '')},
-                    methodology: {resource.get('methodology', '')}, Data_Usage: {resource.get('data_usage', '')},
-                    frequency: {resource.get('frequency', '')}, sku: {resource.get('sku', '')},
-                    data_last_updated: {resource.get('data_last_updated', '')}, data_retreival_date: {resource.get('data_retreival_date', '')},"
+        resource_text = f"Resource Name: {resource.get('name', '')}, Format: {resource.get('format', '')}, Description: {resource.get('description', '')}, Data_Insights: {resource.get('data_insights', '')},methodology: {resource.get('methodology', '')}, Data_Usage: {resource.get('data_usage', '')},frequency: {resource.get('frequency', '')}, sku: {resource.get('sku', '')},data_last_updated: {resource.get('data_last_updated', '')}, data_retreival_date: {resource.get('data_retreival_date', '')}"
         resource_texts.append(resource_text)
     return ' '.join(resource_texts)
 
