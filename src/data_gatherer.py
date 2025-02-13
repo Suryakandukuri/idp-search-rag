@@ -50,19 +50,23 @@ def fetch_ckan_package_data():
         packages = json_data['result']['results']
         documents = []
     for package in packages:
-        resource_details = fetch_resource_details(package['resources']) 
+        for resource in package['resources']:
+            resource_details = []
+        resource_details, sku_list = fetch_resource_details(package['resources']) 
         datastore_info = fetch_datastore_info(package['resources'])
         combined_text = f"{package['title']} {package['notes']} {package['name']} {package['source_name']} {package['sector']} {resource_details} {datastore_info}"
-        documents.append({"text": preprocess_text(combined_text), "metadata": {"package_id": package["id"], "title": package["title"], "url": package["url"]}})
+        documents.append({"text": preprocess_text(combined_text), "metadata": {"package_id": package["id"], "title": package["title"], "url": package["url"], "package_name":package["name"], "sku_list":sku_list }})
     return documents
 
 # Fetch and combine metadata from resources
 def fetch_resource_details(resources):
     resource_texts = []
+    sku_list = []
     for resource in resources:
+        sku_list.append(resource.get('sku', ''))
         resource_text = f"Resource Name: {resource.get('name', '')}, Format: {resource.get('format', '')}, Description: {resource.get('description', '')}, Data_Insights: {resource.get('data_insights', '')},methodology: {resource.get('methodology', '')}, Data_Usage: {resource.get('data_usage', '')},frequency: {resource.get('frequency', '')}, sku: {resource.get('sku', '')},data_last_updated: {resource.get('data_last_updated', '')}, data_retreival_date: {resource.get('data_retreival_date', '')}"
         resource_texts.append(resource_text)
-    return ' '.join(resource_texts)
+    return ' '.join(resource_texts), sku_list
 
 # Datastore SQL API Retrieval (Example for query fetching columns)
 def fetch_datastore_info(resources):
@@ -116,4 +120,5 @@ def gather_embed_and_index():
 if __name__ == "__main__":
     index = gather_embed_and_index()
     index.storage_context.persist("llama_index.json")
-    print("Data gathered and index created.")
+    chroma_client.save("chroma_db")
+    print("Data gathered, index created, vectordb persisted and chromadb saved.")
