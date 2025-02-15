@@ -21,7 +21,7 @@ Workaround for now: Remove the chroma db before reloading the app, and run src/d
 2. Install poetry and all dependencies
    1. poetry config virtualenvs.in-project true
    2. poetry install
-3. Create a .env file with the following variables:
+3. Create a .env in the root directory file with the following variables:
    1. API_KEY=your_groq_api_key
 
 ## Usage:
