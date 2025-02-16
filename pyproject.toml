@@ -1,31 +1,25 @@
-[project]
+[tool.poetry]
 name = "idp-search-rag"
 version = "0.1.0"
 description = "RAG Implementation using FastAPI or Flask for contextual search of datasets on India Data Portal"
-authors = [
-    {name = "Surya Kandukuri",email = "sudham.surya@gmail.com"}
-]
+authors = ["Surya Kandukuri <sudham.surya@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.13,<4.0"
-dependencies = [
-    "transformers (>=4.48.3,<5.0.0)",
-    "nltk (>=3.9.1,<4.0.0)",
-    "sentence-transformers (>=3.4.1,<4.0.0)",
-    "torch (>=2.6.0,<3.0.0)",
-    "scikit-learn (>=1.6.1,<2.0.0)",
-    "requests (>=2.32.3,<3.0.0)",
-    "langchain[all] (>=0.3.18,<0.4.0)",
-    "faiss-cpu (>=1.10.0,<2.0.0)",
-    "ckanapi (>=4.8,<5.0)",
-    "fastapi (>=0.115.8,<0.116.0)",
-    "uvicorn (>=0.34.0,<0.35.0)",
-    "langchain-community (>=0.3.17,<0.4.0)",
-    "python-dotenv (>=1.0.1,<2.0.0)",
-    "llama-index (>=0.12.16,<0.13.0)",
-    "optuna (>=4.2.0,<5.0.0)",
-    "llama-index-llms-groq (>=0.3.1,<0.4.0)"
-]
+#requires-python = ">=3.13,<4.0"
 
+[tool.poetry.dependencies]
+python = ">=3.11,<4.0"
+nltk = ">=3.9.1,<4.0.0"
+requests = ">=2.32.3,<3.0.0"
+ckanapi = ">=4.8,<5.0"
+fastapi = ">=0.115.8,<0.116.0"
+uvicorn = ">=0.34.0,<0.35.0"
+python-dotenv = ">=1.0.1,<2.0.0"
+llama-index = ">=0.12.16,<0.13.0"
+llama-index-llms-groq = ">=0.3.1,<0.4.0"
+chromadb = "^0.6.3"
+llama-index-embeddings-huggingface = "^0.5.1"
+llama-index-vector-stores-chroma = "^0.4.1"
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
