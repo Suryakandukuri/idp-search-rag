@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "RAG Implementation using FastAPI or Flask for contextual search of datasets on India Data Portal"
 authors = ["Surya Kandukuri <sudham.surya@gmail.com>"]
 readme = "README.md"
+package-mode = false
 #requires-python = ">=3.13,<4.0"
 
 [tool.poetry.dependencies]

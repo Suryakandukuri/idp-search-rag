@@ -57,13 +57,21 @@ def fetch_ckan_package_data():
         documents = []
     for package in packages:
         for resource in package["resources"]:
-            # datastore_info_texts = []
+            datastore_info_texts = []
             sku = resource.get("sku", "")
             resource_text = f"Resource Name: {resource.get('name', '')}, Format: {resource.get('format', '')}, Description: {resource.get('description', '')}, Data_Insights: {resource.get('data_insights', '')},methodology: {resource.get('methodology', '')}, Data_Usage: {resource.get('data_usage', '')},frequency: {resource.get('frequency', '')}, sku: {resource.get('sku', '')},data_last_updated: {resource.get('data_last_updated', '')}, data_retreival_date: {resource.get('data_retreival_date', '')}"
-            # api_url = f"https://ckandev.indiadataportal.com/api/3/action/datastore_info?id={resource['id']}"
-            # response = requests.get(api_url).json()
-            # rows = response.get("result", {}).get("records", [])
-            # datastore_info_texts.append(" ".join(str(row) for row in rows))
+            api_url = f"https://ckandev.indiadataportal.com/api/3/action/datastore_info?id={resource['id']}"
+            response = requests.get(api_url).json()
+            # unwanted columns names
+            unwanted_cols = ["id","year","index","state_name", "state_code","district_name","district_code","subdistrict_name", "subdistrict_code","block_name", "block_code", "gp_name","gp_code"]
+            rows = response.get("result", {}).get("fields", [])
+            # remove unwanted cols from rows (list of dicts) where row["id"] is not in unwanted cols
+            if len(rows) > 0: 
+                print(resource["id"])
+                filtered_fields = [field["info"]["label"] if "info" in field else field["id"] for field in rows if field["id"] not in unwanted_cols]
+            else:
+                pass
+            datastore_info_texts.append(" ".join(str(field) for field in filtered_fields))
             # Store full metadata separately
             metadata = {
                 "package_id": package["id"],
@@ -73,7 +81,7 @@ def fetch_ckan_package_data():
                 "sku": sku
             }
             metadata_store[sku] = metadata
-        combined_text = f"{package['title']} {package['notes']} {package['name']} {package['source_name']} {package['sector']} {resource_text}"
+        combined_text = f"{package['title']} {package['notes']} {package['name']} {package['source_name']} {package['sector']} {resource_text} {datastore_info_texts}"
         
         documents.append(
             {
