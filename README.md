@@ -5,15 +5,19 @@ RAG Implementation for contextual search of India Data Portal Datasets
 
 The following are the primary design decisions for the RAG implementation in this repository:
 
-1. Using a document store to store the dataset metadata
+1. Using a document store to store the dataset metadata, inclduing the indicator names
 2. Using a vector store, chroma DB, to store the dataset embeddings for efficient similarity search
 3. Utilizing the power of the LlamaIndex library to create a vector database and language model for efficient and contextual search
 4. Using a language model to generate responses to user queries and provide contextually relevant information
 5. Fast API for get requests and post requests of user queries
 
 # To-Do
-1. Scoring and ranking of results for retrieving only relevant results
-2. A bug now, reload of Fast API app duplicates the documents in the chroma db, resulting in metadata length more than chunk size error. This is due to the fact that the app is reloaded and the documents are not removed from the chroma db. This is a temporary fix, and have to be fixed in future releases.
+1. Better Chunking of documents
+2. Using Prompt Engineering to improve the responses from the language model.
+3. Scoring and ranking of results for retrieving only relevant results. 
+
+   1. Using Cross Encoder for ranking of results and using confidence score to rank the results
+4. A bug now, reload of Fast API app duplicates the documents in the chroma db, resulting in metadata length more than chunk size error. This is due to the fact that the app is reloaded and the documents are not removed from the chroma db. This is a temporary fix, and have to be fixed in future releases.
 Workaround for now: Remove the chroma db before reloading the app, and run src/data_gatherer.py to create a new index
 
 ## Pre-Requisites
